@@ -4,6 +4,10 @@
 
 **The idea with this project is to start creating and maintaining a blog focused on my programming journey. In it, I share my experiences, learning process, and thoughts about the programming world.**
 
+#### Development
+
+Run `npm run dev` to start the local Next.js server. It automatically restarts when a file in `content/` with the `.mdx` extension changes, so post edits are picked up without manually restarting the server.
+
 #### Contact
 
 ✉️ [**roylopezdev@gmail.com**](mailto:roylopezdev@gmail.com)

@@ -110,7 +110,7 @@ Use npm and commit `package-lock.json` when dependencies change.
 
 ```bash
 npm install                 # installs dependencies and runs prisma generate
-npm run dev                 # starts the local Next.js development server
+npm run dev                 # starts Next.js and restarts it when a content .mdx file changes
 npm run lint                # runs ESLint, including Next.js Core Web Vitals rules
 npm test                    # runs the Jest suite once
 npm run test:watch          # runs Jest in watch mode
