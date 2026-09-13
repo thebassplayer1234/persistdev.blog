@@ -47,3 +47,4 @@ next-env.d.ts
 /project_images
 
 post-creator.agent.md
+.env*

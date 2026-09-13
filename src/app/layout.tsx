@@ -1,16 +1,21 @@
-import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
-import "./globals.css";
 import React, { Suspense } from "react";
 
-import Header from "@/src/components/Header";
-import Footer from "../components/Footer";
-import { siteMetadata } from "../utils/siteMetadata";
+import "./globals.css";
+
+import type { Metadata } from "next";
+import { Inter, Manrope } from "next/font/google";
 import Script from "next/script";
-import GoogleAnalytics from "../components/GoogleAnalytics";
-import ToastProvider from "../lib/react-toastify/ToastProvider";
-import { cx } from "../utils/cx";
-import { SearchModal } from "../components/SearchModal/SearchModal";
+
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
+import Header from "@/src/components/Header";
+import Footer from "@/src/components/Footer";
+import { siteMetadata } from "@/src/utils/siteMetadata";
+import GoogleAnalytics from "@/src/components/GoogleAnalytics";
+import ToastProvider from "@/src/lib/react-toastify/ToastProvider";
+import { cx } from "@/src/utils/cx";
+import { SearchModal } from "@/src/components/SearchModal/SearchModal";
 import { getAllPosts } from "@/src/content/generated";
 
 const inter = Inter({
@@ -78,11 +83,7 @@ export default async function RootLayout({
   const allPosts = await getAllPosts();
 
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      data-scroll-behavior="smooth"
-    >
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS ? (
           <GoogleAnalytics ga_id={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS} />
@@ -97,7 +98,7 @@ export default async function RootLayout({
         className={cx(
           inter.variable,
           manrope.variable,
-          "flex min-h-screen flex-col bg-light font-mr dark:bg-dark",
+          "bg-light font-mr dark:bg-dark flex min-h-screen flex-col",
         )}
       >
         <Script id="theme-switcher" strategy="beforeInteractive">
@@ -107,6 +108,8 @@ export default async function RootLayout({
     document.documentElement.classList.remove('dark')
   }`}
         </Script>
+        <Analytics />
+        <SpeedInsights />
         <ToastProvider>
           <Header />
           {children}

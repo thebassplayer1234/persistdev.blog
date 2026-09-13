@@ -24,6 +24,8 @@
     "@tailwindcss/forms": "^0.5.5",
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/typography": "^0.5.9",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.1",
     "fuse.js": "^7.0.0",
