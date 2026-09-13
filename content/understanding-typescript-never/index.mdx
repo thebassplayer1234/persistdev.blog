@@ -1,0 +1,196 @@
+---
+title: "Understanding TypeScript's never Type"
+description: "Learn what TypeScript's never type means, why it exists, and how to use it for exhaustive checks, non-returning functions, and type-level filtering."
+image: "../../public/posts/understanding-typescript-never.png"
+publishedAt: "2026-09-13"
+updatedAt: "2026-09-13"
+author: "Roy Lopez"
+isPublished: true
+tags:
+  - TypeScript
+  - programming
+  - best practices
+---
+
+The TypeScript type `never` often first appears in a confusing error message. The name is not very friendly either: how can a type be “never”?
+
+It becomes much easier to understand when it is connected to a real situation. In this article, we will follow one example: an online shop that needs to display and process the state of an order.
+
+The central idea is simple: `never` represents an impossible state. It is the type TypeScript uses when there are no values left that a variable could be.
+
+## Start with a real set of possible states
+
+An order can be preparing, on its way, delivered, or cancelled. Each state carries different information that the interface needs to show.
+
+```typescript
+type Order =
+  | { status: "preparing"; orderNumber: string }
+  | { status: "shipping"; orderNumber: string; trackingNumber: string }
+  | { status: "delivered"; orderNumber: string; deliveredAt: Date }
+  | { status: "cancelled"; orderNumber: string; reason: string };
+```
+
+This is a **discriminated union**. The `status` property is the discriminator: when TypeScript sees `status: "shipping"`, it knows that `trackingNumber` is available too.
+
+This model mirrors the real world. An order cannot be both delivered and cancelled at the same time, and a cancelled order does not have a delivery date. By defining the allowed states explicitly, we make those invalid combinations harder to represent in code.
+
+## What does `never` mean here?
+
+Suppose we handle every possible `status`. After handling `preparing`, `shipping`, `delivered`, and `cancelled`, there is no valid order state left.
+
+That “nothing left” is `never`.
+
+Unlike `undefined`, `never` is not a value that might be present. There is no value we can assign to it:
+
+```typescript
+let impossibleOrder: never;
+
+impossibleOrder = { status: "preparing", orderNumber: "ORD-42" };
+// Error: Type '{ status: "preparing"; orderNumber: string }'
+// is not assignable to type 'never'.
+```
+
+Thinking of types as sets can help. `Order` is a set containing four kinds of order. `never` is the empty set: it contains no possible value at all.
+
+## Make the order screen exhaustive
+
+The first practical use of `never` is checking that every state has been handled. Here is a function that creates the message shown on an order-details page:
+
+```typescript
+function getOrderMessage(order: Order): string {
+  switch (order.status) {
+    case "preparing":
+      return `Order ${order.orderNumber} is being prepared.`;
+    case "shipping":
+      return `Order ${order.orderNumber} is on its way. Tracking: ${order.trackingNumber}`;
+    case "delivered":
+      return `Order ${order.orderNumber} was delivered on ${order.deliveredAt.toDateString()}.`;
+    case "cancelled":
+      return `Order ${order.orderNumber} was cancelled: ${order.reason}`;
+  }
+}
+```
+
+Inside each case, TypeScript narrows `order` to the correct member of the union. That is why `trackingNumber` is safe in the `shipping` case, but would be an error in the `preparing` case.
+
+This works today, but there is a maintenance problem. Imagine that the business later adds a `returned` status. The type changes, but it is easy for a developer to forget this function while updating the rest of the application.
+
+## Let `never` catch the missing case
+
+We can make that future change fail at compile time by adding a small helper:
+
+```typescript
+function assertNever(value: never): never {
+  throw new Error(`Unexpected order: ${JSON.stringify(value)}`);
+}
+```
+
+Now we use it in the `default` branch of the same function:
+
+```typescript
+function getOrderMessage(order: Order): string {
+  switch (order.status) {
+    case "preparing":
+      return `Order ${order.orderNumber} is being prepared.`;
+    case "shipping":
+      return `Order ${order.orderNumber} is on its way. Tracking: ${order.trackingNumber}`;
+    case "delivered":
+      return `Order ${order.orderNumber} was delivered on ${order.deliveredAt.toDateString()}.`;
+    case "cancelled":
+      return `Order ${order.orderNumber} was cancelled: ${order.reason}`;
+    default:
+      return assertNever(order);
+  }
+}
+```
+
+With the four states above, TypeScript has eliminated every possibility before reaching `default`, so it considers `order` to be `never`. The helper accepts it and the code compiles.
+
+If we add this member later:
+
+```typescript
+| { status: "returned"; orderNumber: string; returnedAt: Date }
+```
+
+then `order` in `default` can be a returned order. It is no longer `never`, so `assertNever(order)` produces a type error. In other words, the compiler tells us to decide what the order page should say for a return before we ship the change.
+
+This is useful for any finite list of cases: payment results, reducer actions, user permissions, notifications, and API responses. It turns a forgotten branch into a visible task during development.
+
+## Use the same idea for code that cannot continue
+
+`never` is also the return type for a function that cannot finish normally. It either throws an error or runs forever.
+
+Our order page might load an order from a repository. If it does not exist, the request should stop rather than return a pretend order:
+
+```typescript
+function orderIsNotDelivered(orderNumber: string): never {
+  throw new Error(`Order ${orderNumber} has not been delivered yet.`);
+}
+
+function getDeliveredAt(order: Order): Date {
+  if (order.status === "delivered") {
+    return order.deliveredAt;
+  }
+
+  return orderIsNotDelivered(order.orderNumber);
+}
+```
+
+The important part is that `orderIsNotDelivered` always throws. Because its return type is `never`, TypeScript knows that execution cannot reach the end of `getDeliveredAt` through that path. The return type can safely stay `Date`.
+
+Compare this with `void`. A function returning `void` completes normally but does not provide a useful result, like sending a confirmation email. A function returning `never` does not complete normally at all.
+
+| Type        | In this order example                                               |
+| ----------- | ------------------------------------------------------------------- |
+| `never`     | There is no possible value, or execution stops by throwing.         |
+| `void`      | An email is sent, but the caller gets no result back.               |
+| `undefined` | An optional value is specifically absent.                           |
+| `unknown`   | Data arrived from outside the app and must be validated before use. |
+
+## Filter the same order type with `never`
+
+The same `Order` union can also show a more advanced use. A dashboard may need a list of completed orders, meaning orders that are either delivered or cancelled. We can express that as a conditional type:
+
+```typescript
+type CompletedOrder<T> = T extends { status: "delivered" | "cancelled" }
+  ? T
+  : never;
+
+type FinishedOrder = CompletedOrder<Order>;
+```
+
+`FinishedOrder` becomes this:
+
+```typescript
+type FinishedOrder =
+  | { status: "delivered"; orderNumber: string; deliveredAt: Date }
+  | { status: "cancelled"; orderNumber: string; reason: string };
+```
+
+When a conditional type receives a union, TypeScript evaluates it for each member. The preparing and shipping members do not match, so they become `never`. A union ignores `never`, leaving only the two completed states.
+
+```typescript
+// preparing | shipping | delivered | cancelled
+// never     | never    | delivered | cancelled
+// becomes: delivered | cancelled
+```
+
+This is the same “nothing left” idea from the `switch`, now used to remove invalid options at the type level. It is also the mechanism behind useful built-in types such as `Extract<T, U>` and `Exclude<T, U>`.
+
+## What `never` does not do
+
+`never` exists only in TypeScript's type system. It does not validate an order received from an API, add a runtime guard, or prevent bad JavaScript from running.
+
+The `assertNever` helper still throws as a defensive fallback. Its real value is earlier: when a developer expands the `Order` type but has not updated every screen that uses it, the compiler highlights the missing decision.
+
+If TypeScript shows `never` somewhere unexpected, treat it as a clue. It often means previous checks have ruled out every possibility, two conditions contradict each other, or a generic type filtered out all of its options.
+
+## A practical rule of thumb
+
+Reach for `never` when you want to say one of these things:
+
+- Every valid state has been handled, so no state should remain.
+- This function cannot return to its caller normally.
+- This branch of a type-level condition should contribute no valid result.
+
+In each case, `never` means the same thing: there is no possible value here. Starting with one real model, such as an order's lifecycle, makes the type much less mysterious—and makes it easier to spot opportunities to use it in your own code.
