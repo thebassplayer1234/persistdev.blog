@@ -1,5 +1,13 @@
 # Project Knowledge Update Log
 
+## 2026-09-14: Self-hosted Inter
+
+Replaced the Google-hosted Inter import with the checked-in variable font.
+
+## 2026-09-14: Self-hosted Manrope
+
+Replaced the Google-hosted Manrope import with the checked-in variable font.
+
 ## 2026-09-14: Aligned public visibility and runtime documentation
 
 Defined the public-post rule across routes, listings, search, categories, and

@@ -9,8 +9,8 @@ tags: [nextjs, search, theme, metadata, analytics]
 
 The root layout wraps every route with the header, footer, toast provider,
 Vercel Analytics, and Vercel Speed Insights. It supplies site-level metadata
-from `src/utils/siteMetadata.ts` and uses Inter and Manrope through
-`next/font/google`.
+from `src/utils/siteMetadata.ts` and loads the checked-in Inter and Manrope
+variable fonts through `next/font/local`.
 
 The primary navigation exposes `/`, `/about`, and a query-driven search modal.
 The about page is rendered at `/about`; the home page is rendered at `/`.

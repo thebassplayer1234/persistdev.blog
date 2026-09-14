@@ -3,7 +3,7 @@ import React, { Suspense } from "react";
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 
 import { Analytics } from "@vercel/analytics/next";
@@ -19,15 +19,17 @@ import { SearchModal } from "@/src/components/SearchModal/SearchModal";
 import { getAllPosts } from "@/src/content/generated";
 import { isPublicPost } from "@/src/utils/Post";
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: "./fonts/Inter-VariableFont_opsz,wght.ttf",
   display: "swap",
   variable: "--font-in",
+  weight: "100 900",
 });
-const manrope = Manrope({
-  subsets: ["latin"],
+const manrope = localFont({
+  src: "./fonts/Manrope-VariableFont_wght.ttf",
   display: "swap",
   variable: "--font-mr",
+  weight: "200 800",
 });
 
 const {
