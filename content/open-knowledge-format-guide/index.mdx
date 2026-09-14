@@ -1,0 +1,227 @@
+---
+title: "A Practical Introduction to Open Knowledge Format (OKF)"
+description: "Learn how Open Knowledge Format organizes durable, agent-readable project knowledge with Markdown, YAML frontmatter, links, indexes, and change logs."
+image: "../../public/posts/open-knowledge-format-guide.png"
+publishedAt: "2026-09-14"
+updatedAt: "2026-09-14"
+author: "Roy Lopez"
+isPublished: true
+tags:
+  - ai agents
+  - developer tools
+  - software engineering
+---
+
+AI coding agents make a repository easier to change, but they also make one old problem much more visible: where should a project keep the knowledge that explains how it works?
+
+Some information belongs in code. Some belongs in a task-specific plan. Some belongs in an `AGENTS.md` file that tells contributors how to work safely. But durable facts—why a boundary exists, who owns a piece of data, which route is public, or what an integration guarantees—need a place that is structured enough to navigate and simple enough to maintain.
+
+[Open Knowledge Format (OKF)](https://github.com/GoogleCloudPlatform/open-knowledge-format) is one approach. It is a portable format for agent-readable knowledge built from ordinary Markdown files, YAML frontmatter, and links. It does not require a database, a proprietary editor, or a new file format.
+
+This article explains the core model, shows a small bundle, and offers a practical way to introduce OKF into an existing codebase.
+
+## What problem does OKF solve?
+
+Most repositories already contain useful documentation, but it is often difficult to use as a knowledge system:
+
+- a long README mixes setup steps, architecture notes, and temporary announcements
+- a design decision is buried in an old pull request
+- a task plan describes implementation details that are no longer current
+- an agent instruction file contains durable product rules alongside workflow preferences
+
+The result is not necessarily missing documentation. It is documentation with unclear ownership, lifetime, and relationships.
+
+OKF makes a helpful distinction: a bundle is a collection of small, addressable concepts. Each concept is a Markdown file with a stable path and a declared `type`. Links connect concepts just as they connect pages on the web.
+
+That makes the knowledge usable by people and tools. A developer can open one file directly. An agent can begin at an index, follow relevant links, and avoid loading a whole documentation directory for a focused change.
+
+## The basic shape of an OKF bundle
+
+An OKF bundle is a directory tree of `.md` files. A non-reserved Markdown file represents one concept, and its path without the `.md` extension is its identifier.
+
+Here is a small example for a blog application:
+
+```text
+docs/okf/
+├── index.md
+├── architecture/
+│   ├── index.md
+│   └── content-pipeline.md
+├── domain/
+│   ├── index.md
+│   └── post-slug.md
+└── log.md
+```
+
+In this structure:
+
+- `architecture/content-pipeline.md` identifies the content pipeline concept.
+- `domain/post-slug.md` identifies the post-slug concept.
+- `index.md` files help readers discover concepts at a level of the tree.
+- `log.md` records durable changes in newest-first order.
+
+The format reserves the names `index.md` and `log.md` at every level. Keeping those names predictable gives tools a natural starting point without imposing a rigid taxonomy on the rest of the bundle.
+
+## Write one concept per file
+
+The most important authoring choice is the size of a concept. A good concept is the smallest useful target for a link, citation, or update.
+
+For example, this application could document the content pipeline separately from the public URL rule. They are related, but they answer different questions:
+
+```md
+<!-- docs/okf/architecture/content-pipeline.md -->
+---
+type: Architecture
+title: Content pipeline
+---
+
+Posts are stored as MDX files under `content/<slug>/index.mdx`.
+At runtime, the application reads frontmatter and enriches each post.
+
+The public URL is determined by the post's flattened path.
+See [the post-slug rule](../domain/post-slug.md).
+```
+
+```md
+<!-- docs/okf/domain/post-slug.md -->
+---
+type: Domain Rule
+title: Post slug
+---
+
+A post slug is a stable public identifier. A post at
+`content/my-post/index.mdx` is published at `/post/my-post`.
+
+Changing a slug requires a redirect for the previous URL.
+```
+
+The `type` field is required and intentionally uses an open vocabulary. `Architecture`, `Domain Rule`, `Integration`, and `Decision` are useful examples, but OKF consumers should tolerate types they do not recognize. The point is to express meaning, not to force every project into a fixed catalog.
+
+## Use frontmatter for facts about the knowledge
+
+The body of a concept explains the knowledge itself. YAML frontmatter describes the document: what kind of concept it is, where it came from, and how confidently it has been checked.
+
+Only `type` is required by the core format. Add metadata when it gives a reader useful context. For example, this concept has an external source and a verification record:
+
+```md
+---
+type: Integration
+title: Subscription email delivery
+sources:
+  - id: sendgrid-docs
+    title: SendGrid Mail Send API
+    resource: https://www.twilio.com/docs/sendgrid/api-reference/mail-send/mail-send
+verified:
+  - by: human:roy
+    at: 2026-09-14T10:30:00Z
+---
+
+The subscription route sends transactional email through SendGrid. [^sendgrid-docs]
+
+[^sendgrid-docs]: SendGrid documentation, source: sendgrid-docs.
+```
+
+This is useful because it separates two different claims:
+
+- `sources` says where a fact came from.
+- `verified` says who confirmed that the document still matches reality and when.
+
+That distinction matters. An agent may generate a first draft from reliable source material, but that is not the same as a human confirming the behavior in the running system. Avoid filling in provenance fields merely to make a document look complete; unknown provenance is more honest than invented metadata.
+
+When you use timestamps in metadata, write them as ISO 8601 datetimes with an explicit offset, such as `2026-09-14T10:30:00Z`. A plain date is appropriate for a change-log heading, but not for a verification timestamp.
+
+## Let links express relationships
+
+OKF uses standard Markdown links rather than a special relationship language. This keeps a bundle portable: any Markdown reader can follow it, and an agent does not need a custom graph database to understand the connection.
+
+The surrounding text supplies the relationship:
+
+```md
+The publishing workflow depends on
+[the content pipeline](../architecture/content-pipeline.md).
+
+For the public URL contract, see
+[the post-slug rule](post-slug.md).
+```
+
+Use links where a reader genuinely needs another concept to understand or verify a claim. A dense web of links is not automatically better. Clear links from an index to its important children, and from one concept to an explicitly related concept, are usually enough.
+
+## Indexes are navigation, not a second source of truth
+
+An `index.md` helps a reader find the concepts in one part of a bundle. The root index may declare the format version:
+
+```md
+<!-- docs/okf/index.md -->
+---
+okf_version: "0.2"
+---
+
+# Project knowledge
+
+- [Architecture](architecture/index.md)
+- [Domain rules](domain/index.md)
+```
+
+Nested indexes normally do not need frontmatter:
+
+```md
+<!-- docs/okf/domain/index.md -->
+# Domain rules
+
+- [Post slug](post-slug.md)
+```
+
+An index should make discovery easier; it should not repeat the full body of every concept. Keeping the details in their own files makes future updates less likely to drift.
+
+Some tooling can generate indexes. If a project adopts generated indexes, treat them as machine-owned output and do not edit them by hand. The source concepts remain the durable material humans should review.
+
+## Keep a small, honest change log
+
+`log.md` is an authored change history for durable knowledge. Its entries are newest first, and each heading begins with an ISO date:
+
+```md
+## 2026-09-14: Added post URL contract
+
+Documented that post slugs are public identifiers and that renamed slugs require redirects.
+
+## 2026-09-10: Added content pipeline
+
+Documented where post MDX files live and how the application reads them.
+```
+
+Do not turn the log into a work diary. A temporary investigation, a failed experiment, or a routine wording fix usually does not need an entry. Add one when the bundle gains or materially changes knowledge that future contributors will rely on.
+
+## A workflow that works with agents
+
+OKF is especially useful when a repository is worked on by both people and agents. A disciplined workflow can be simple:
+
+1. Start at the closest relevant `index.md`.
+2. Follow only the links needed for the requested change.
+3. Check important claims against the implementation, configuration, or primary source.
+4. Update an existing concept—or add a focused one—when the change creates durable knowledge.
+5. Update the relevant index and add a truthful log entry if the bundle uses one.
+
+This is not a replacement for `AGENTS.md` or task plans. They operate at different levels:
+
+| Artifact | Best for |
+| --- | --- |
+| `AGENTS.md` | Repository-wide working rules and safety constraints |
+| Task plan | One requested change, its scope, and implementation decisions |
+| OKF bundle | Durable concepts, rules, relationships, and verified sources |
+
+For instance, “run the type checker before handing off work” belongs in `AGENTS.md`. “Add related posts to article pages” belongs in a task plan. “Post slugs are stable public identifiers” belongs in an OKF concept.
+
+## Start small
+
+You do not need to convert every document in a repository to adopt OKF. Begin with two or three facts that repeatedly slow down onboarding, reviews, or agent-assisted changes:
+
+- a public routing contract
+- a data ownership rule
+- an external integration boundary
+- a security or persistence invariant
+
+Create a root index, document each fact in a focused file, and link related concepts. Then maintain the bundle as the system changes.
+
+The format is deliberately modest. Its value comes from making project knowledge addressable, navigable, and honest about its sources—not from adding ceremony. Markdown remains easy to read, version control remains the review surface, and agents get a clearer path to the context that actually matters.
+
+For the complete rules and examples, read the [OKF specification](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md).
