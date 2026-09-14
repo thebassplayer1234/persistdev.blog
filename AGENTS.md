@@ -219,6 +219,9 @@ Reference post images with a path that resolves to `public/`.
 
 Add assets under `public/posts/` when appropriate.
 
+New post hero images must be 16:9 and at least 1920×1080 pixels. Verify their
+dimensions before adding the image path to front matter.
+
 Keep slugs stable because they define:
 
 `/post/<slug>`

@@ -34,6 +34,11 @@ Every post supplies `title`, `description`, `publishedAt`, and `author`.
 Post dates are parsed as JavaScript dates and exposed as ISO timestamps in the
 generated model. Authors should use `YYYY-MM-DD` dates in post frontmatter.
 
+New post hero images are 16:9 assets with a minimum resolution of 1920×1080
+pixels. Store them under `public/posts/`, verify their dimensions before use,
+and reference them from post frontmatter with a path that resolves inside
+`public/`.
+
 See [the blog-post domain rule](/domain/blog-post.md) for authoring and URL
 constraints, and [public routes](/architecture/public-routes.md) for route
 behavior.

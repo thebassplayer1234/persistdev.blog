@@ -1,5 +1,9 @@
 # Project Knowledge Update Log
 
+## 2026-09-14: Established post hero image standard
+
+New post hero images use a 16:9 aspect ratio and are at least 1920×1080 pixels.
+
 ## 2026-09-14: Self-hosted Inter
 
 Replaced the Google-hosted Inter import with the checked-in variable font.
