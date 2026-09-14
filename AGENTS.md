@@ -230,6 +230,11 @@ If a slug must change, add a redirect in `next.config.js`.
 
 Ensure MDX code examples are valid, headings are meaningful, and front matter accurately represents the post.
 
+When asked to create a LinkedIn post for a specific article, write a short,
+simple promotion of no more than 75 words. Focus on one practical takeaway,
+use plain language, and include the article's canonical URL. Do not turn it
+into a full article summary or add unnecessary marketing language.
+
 ## Tests and verification
 
 Add or update Jest tests in `__tests__/` for changed:

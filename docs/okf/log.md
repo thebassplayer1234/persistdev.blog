@@ -1,5 +1,10 @@
 # Project Knowledge Update Log
 
+## 2026-09-14: Defined LinkedIn article-promotion guidance
+
+LinkedIn promotions are short, simple, article-specific posts with one
+practical takeaway and the canonical article URL.
+
 ## 2026-09-14: Established post hero image standard
 
 New post hero images use a 16:9 aspect ratio and are at least 1920×1080 pixels.

@@ -39,6 +39,13 @@ pixels. Store them under `public/posts/`, verify their dimensions before use,
 and reference them from post frontmatter with a path that resolves inside
 `public/`.
 
+## LinkedIn promotion
+
+When creating a LinkedIn post for a specific article, keep it short and
+simple: no more than 75 words, one practical takeaway in plain language, and
+the article's canonical URL. It is a promotion, not a full summary; avoid
+unnecessary marketing language.
+
 See [the blog-post domain rule](/domain/blog-post.md) for authoring and URL
 constraints, and [public routes](/architecture/public-routes.md) for route
 behavior.
