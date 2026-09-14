@@ -1,5 +1,10 @@
 import type { Post } from "@/src/content/generated";
-import { getRelatedPosts } from "@/src/utils/Post";
+import {
+  getRelatedPosts,
+  isPublicPost,
+  numberOfPosts,
+  sortPosts,
+} from "@/src/utils/Post";
 
 const createPost = (
   id: string,
@@ -125,5 +130,34 @@ describe("getRelatedPosts", () => {
     );
 
     expect(getRelatedPosts(currentPost, [currentPost, candidate])).toEqual([]);
+  });
+});
+
+describe("public post visibility", () => {
+  it("excludes unpublished and future posts from public listings", () => {
+    const visible = createPost(
+      "visible",
+      ["TypeScript"],
+      "2024-01-01T00:00:00Z",
+    );
+    const unpublished = createPost(
+      "unpublished",
+      ["TypeScript"],
+      "2024-01-02T00:00:00Z",
+      { isPublished: false },
+    );
+    const future = createPost(
+      "future",
+      ["TypeScript"],
+      "9999-01-03T00:00:00Z",
+    );
+    const now = new Date("2024-01-02T12:00:00Z");
+    const posts = [visible, unpublished, future];
+
+    expect(isPublicPost(visible, now)).toBe(true);
+    expect(isPublicPost(unpublished, now)).toBe(false);
+    expect(isPublicPost(future, now)).toBe(false);
+    expect(numberOfPosts(posts)).toBe(1);
+    expect(sortPosts(posts).map((post) => post._id)).toEqual(["visible"]);
   });
 });

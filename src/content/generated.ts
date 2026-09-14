@@ -5,6 +5,7 @@ import matter from "gray-matter";
 import readingTime, { type ReadTimeResults } from "reading-time";
 import GithubSlugger, { slug } from "github-slugger";
 import sharp from "sharp";
+import { isPublicPost } from "@/src/utils/Post";
 
 const CONTENT_DIR = path.join(process.cwd(), "content");
 const PUBLIC_DIR = path.join(process.cwd(), "public");
@@ -215,7 +216,7 @@ export const getCategorySlugs = cache(async (): Promise<string[]> => {
     const categories = new Set<string>(["all"]);
 
     posts.forEach((post) => {
-      if (!post.isPublished) {
+      if (!isPublicPost(post)) {
         return;
       }
 

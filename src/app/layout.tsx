@@ -17,6 +17,7 @@ import ToastProvider from "@/src/lib/react-toastify/ToastProvider";
 import { cx } from "@/src/utils/cx";
 import { SearchModal } from "@/src/components/SearchModal/SearchModal";
 import { getAllPosts } from "@/src/content/generated";
+import { isPublicPost } from "@/src/utils/Post";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -80,7 +81,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const allPosts = await getAllPosts();
+  const publicPosts = (await getAllPosts()).filter((post) =>
+    isPublicPost(post),
+  );
 
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
@@ -116,7 +119,7 @@ export default async function RootLayout({
           <Footer />
         </ToastProvider>
         <Suspense fallback={<>Loading...</>}>
-          <SearchModal posts={allPosts} />
+          <SearchModal posts={publicPosts} />
         </Suspense>
       </body>
     </html>

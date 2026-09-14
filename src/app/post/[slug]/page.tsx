@@ -1,5 +1,5 @@
 import { getAllPosts, getPostBySlug } from "@/src/content/generated";
-import { getRelatedPosts } from "@/src/utils/Post";
+import { getRelatedPosts, isPublicPost } from "@/src/utils/Post";
 import PostDetails from "@/src/components/Post/PostDetails";
 import RelatedPosts from "@/src/components/Post/RelatedPosts";
 import RenderMdx from "@/src/components/Post/RenderMdx";
@@ -15,7 +15,9 @@ import parseDate from "@/src/utils/dateParser";
 
 export async function generateStaticParams() {
   const allPosts = await getAllPosts();
-  return allPosts.map((post) => ({ slug: post._raw.flattenedPath }));
+  return allPosts
+    .filter((post) => isPublicPost(post))
+    .map((post) => ({ slug: post._raw.flattenedPath }));
 }
 
 export async function generateMetadata({
@@ -25,7 +27,7 @@ export async function generateMetadata({
 }): Promise<Metadata | void> {
   const { slug: postSlug } = await params;
   const post = await getPostBySlug(postSlug);
-  if (!post) {
+  if (!post || !isPublicPost(post)) {
     notFound();
   }
 
@@ -78,6 +80,9 @@ export async function generateMetadata({
 const PostPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug: postSlug } = await params;
   const post = await getPostBySlug(postSlug);
+  if (!post || !isPublicPost(post)) {
+    return <NotFound />;
+  }
   const firstPostTag = post?.tags?.[0];
 
   const datePublished = parseDate(post?.publishedAt);
@@ -114,8 +119,6 @@ const PostPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
       },
     ],
   };
-
-  if (!post) return <NotFound />;
 
   const relatedPosts = getRelatedPosts(post, await getAllPosts());
 

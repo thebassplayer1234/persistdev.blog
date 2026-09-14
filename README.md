@@ -8,6 +8,10 @@
 
 Run `npm run dev` to start the local Next.js server. It automatically restarts when a file in `content/` with the `.mdx` extension changes, so post edits are picked up without manually restarting the server.
 
+#### Project knowledge
+
+Durable architecture, domain rules, routing contracts, and integration boundaries live in the [OKF knowledge bundle](docs/okf/index.md). Start at its index and follow the relevant links before making a significant change.
+
 #### Contact
 
 ✉️ [**roylopezdev@gmail.com**](mailto:roylopezdev@gmail.com)

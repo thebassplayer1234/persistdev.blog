@@ -3,6 +3,7 @@ import PostLayoutThree from "@/src/components/Post/PostLayoutThree";
 import Categories from "@/src/components/Post/Categories";
 import GithubSlugger, { slug } from "github-slugger";
 import { Metadata } from "next";
+import { isPublicPost } from "@/src/utils/Post";
 
 type CategoryPageParams = {
   params: Promise<{
@@ -36,11 +37,7 @@ const CategoryPage = async ({ params }: CategoryPageParams) => {
   const allPosts = await getAllPosts();
   const allCategories = ["all"];
   const posts = allPosts
-    .filter((post) => {
-      const today = new Date();
-      const publishedDate = new Date(post.publishedAt);
-      return publishedDate <= today;
-    })
+    .filter((post) => isPublicPost(post))
     .filter((post) => {
       return post.tags?.some((tag) => {
         const slugified = slug(tag);

@@ -2,25 +2,26 @@ import type { Post } from "@/src/content/generated";
 import { compareDesc, parseISO } from "date-fns";
 import { slug } from "github-slugger";
 
+/**
+ * Returns whether a post is eligible for a public listing, search result, or page.
+ */
+export const isPublicPost = (post: Post, now = new Date()): boolean => {
+  return post.isPublished && parseISO(post.publishedAt) <= now;
+};
+
 export const sortPosts = (posts: Post[]) => {
-  const today = new Date();
+  const now = new Date();
   return posts
     .slice()
-    .filter((post) => {
-      const publishedAt = parseISO(post.publishedAt);
-      return publishedAt <= today;
-    })
+    .filter((post) => isPublicPost(post, now))
     .sort((a: Post, b: Post) =>
       compareDesc(parseISO(a.publishedAt), parseISO(b.publishedAt)),
     );
 };
 
 export const numberOfPosts = (posts: Post[]): number => {
-  const today = new Date();
-  return posts.filter((post) => {
-    const publishedAt = parseISO(post.publishedAt);
-    return publishedAt <= today;
-  }).length;
+  const now = new Date();
+  return posts.filter((post) => isPublicPost(post, now)).length;
 };
 
 /**
@@ -42,11 +43,11 @@ export const getRelatedPosts = (
 
   return posts
     .filter((post) => {
-      if (post._id === currentPost._id || !post.isPublished) {
+      if (post._id === currentPost._id || !isPublicPost(post, now)) {
         return false;
       }
 
-      return parseISO(post.publishedAt) <= now;
+      return true;
     })
     .map((post) => {
       const postTags = new Set(post.tags?.map((tag) => slug(tag)));
